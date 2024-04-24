@@ -40,6 +40,14 @@ io.on("connection", (socket) => {
 
 });
 
+app.get("/", (req, res)=> {
+
+  return res.status(200).json({
+    message: "Working"
+  })
+
+})
+
 server.listen(4000, () => {
   console.log("Connected Yo");
 });
