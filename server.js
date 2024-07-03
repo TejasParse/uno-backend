@@ -138,6 +138,30 @@ io.on("connection", (socket) => {
 
 	})
 
+	socket.on("message_send", (data) => {
+		let index = gameRooms.findIndex((elm) => elm.roomNo === data.roomNo);
+
+		if (index === -1) {
+
+			socket.emit("custom_error", {
+				message: "Room Not Found!",
+				type: "join_room_error"
+			})
+
+
+		} else {
+
+			gameRooms[index].messages.push({
+				type: data.type,
+				message: data.message,
+				sender: data.sender
+			})
+
+			updateAllPlayers(socket, gameRooms[index]);
+
+		}
+	})
+
 	socket.on("host_message_send", (data) => {
 		host_message_send(data, socket);
 	})
