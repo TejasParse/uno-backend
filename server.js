@@ -3,10 +3,10 @@ const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
-const { filterGameData, updateAllPlayers } = require("./utils/helper")
+const { filterGameData, updateAllPlayers, getNewDecks } = require("./utils/helper")
 
 const { join_room, host_message_send, player_message_send } = require("./controllers/socketControllers");
-
+const cards = require("./assets/cards.json")
 
 app.use(cors());
 const server = http.createServer(app);
@@ -138,6 +138,7 @@ io.on("connection", (socket) => {
 
 	})
 
+	// Sending Message
 	socket.on("message_send", (data) => {
 		let index = gameRooms.findIndex((elm) => elm.roomNo === data.roomNo);
 
@@ -159,6 +160,45 @@ io.on("connection", (socket) => {
 
 			updateAllPlayers(socket, gameRooms[index]);
 
+		}
+	})
+
+	socket.on("start_game", (data) => {
+		let index = gameRooms.findIndex((elm) => elm.roomNo === data.roomNo);
+
+		if (index === -1) {
+
+			socket.emit("custom_error", {
+				message: "Room Not Found!",
+				type: "join_room_error"
+			})
+
+
+		} else {
+
+			const { players, selectedIndexes } = getNewDecks(gameRooms[index].players, gameRooms[index].selectedIndexes);
+			console.log(players, selectedIndexes, "New Data");
+
+			let randomIndex;
+			do {
+				randomIndex = Math.floor(Math.random() * cards.length);
+			} while (gameRooms[index].selectedIndexes.has(randomIndex));
+
+
+			gameRooms[index].selectedIndexes.add(randomIndex);
+
+			gameRooms[index].players = players;
+			gameRooms[index].selectedIndexes = selectedIndexes;
+			gameRooms[index].started = 1;
+			gameRooms[index].presentCard = randomIndex;
+			gameRooms[index].messages.push({
+				sender: "HOST",
+				message: "The Game has started!",
+				type: "command"
+			})
+
+
+			updateAllPlayers(socket, gameRooms[index])
 		}
 	})
 

@@ -1,3 +1,5 @@
+const cards = require("../assets/cards.json")
+
 exports.filterGameData = (gameData) => {
 
     let output = {};
@@ -50,4 +52,24 @@ exports.updateAllPlayers = (socketClient, gameData) => {
 
     
 
+}
+
+exports.getNewDecks = (players, selectedIndexes) => {
+	const numberOfSets = players.length;
+
+	const selectedSets = [];
+
+	for (let i = 0; i < numberOfSets; i++) {
+		const selectedCards = [];
+		while (selectedCards.length < 10) {
+			const randomIndex = Math.floor(Math.random() * cards.length);
+			if (!selectedIndexes.has(randomIndex)) {
+				selectedIndexes.add(randomIndex);
+				selectedCards.push(randomIndex);
+			}
+		}
+		players[i].cards = selectedCards
+		selectedSets.push(selectedCards);
+	}
+	return { players, selectedIndexes }
 }
