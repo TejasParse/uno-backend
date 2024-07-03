@@ -163,6 +163,7 @@ io.on("connection", (socket) => {
 		}
 	})
 
+	// Game Start and create decks
 	socket.on("start_game", (data) => {
 		let index = gameRooms.findIndex((elm) => elm.roomNo === data.roomNo);
 
@@ -177,7 +178,7 @@ io.on("connection", (socket) => {
 		} else {
 
 			const { players, selectedIndexes } = getNewDecks(gameRooms[index].players, gameRooms[index].selectedIndexes);
-			console.log(players, selectedIndexes, "New Data");
+			// console.log(players, selectedIndexes, "New Data");
 
 			let randomIndex;
 			do {
@@ -185,10 +186,10 @@ io.on("connection", (socket) => {
 			} while (gameRooms[index].selectedIndexes.has(randomIndex));
 
 
-			gameRooms[index].selectedIndexes.add(randomIndex);
-
+			
 			gameRooms[index].players = players;
 			gameRooms[index].selectedIndexes = selectedIndexes;
+			gameRooms[index].selectedIndexes.add(randomIndex);
 			gameRooms[index].started = 1;
 			gameRooms[index].presentCard = randomIndex;
 			gameRooms[index].messages.push({
@@ -196,6 +197,57 @@ io.on("connection", (socket) => {
 				message: "The Game has started!",
 				type: "command"
 			})
+
+
+			updateAllPlayers(socket, gameRooms[index])
+		}
+	})
+
+	socket.on("random_card", (data) => {
+		let index = gameRooms.findIndex((elm) => elm.roomNo === data.roomNo);
+
+		if (index === -1) {
+
+			socket.emit("custom_error", {
+				message: "Room Not Found!",
+				type: "join_room_error"
+			})
+
+
+		} else {
+			// console.log(players, selectedIndexes, "New Data");
+
+			// Pick a random card
+			let randomIndex;
+			do {
+				randomIndex = Math.floor(Math.random() * cards.length);
+			} while (gameRooms[index].selectedIndexes.has(randomIndex));
+
+
+			gameRooms[index].selectedIndexes.add(randomIndex);
+			let playIndex = gameRooms[index].players.findIndex(elm => elm.username === data.username)
+			gameRooms[index].players[playIndex].cards.push(randomIndex)
+
+			// Move to new player
+			let dir1 = gameRooms[index].direction
+
+			let newCurrentTurn1
+			if (!dir1) {
+				newCurrentTurn1 = gameRooms[index].current_turn + 1;
+				if (newCurrentTurn1 >= gameRooms[index].players.length) {
+					newCurrentTurn1 = 0;
+				}
+
+			} else {
+
+				newCurrentTurn1 = gameRooms[index].current_turn - 1;
+				if (newCurrentTurn1 < 0) {
+					newCurrentTurn1 = gameRooms[index].players.length - 1;
+				}
+
+			}
+			
+			gameRooms[index].current_turn = newCurrentTurn1
 
 
 			updateAllPlayers(socket, gameRooms[index])

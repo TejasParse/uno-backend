@@ -40,36 +40,36 @@ exports.updateAllPlayers = (socketClient, gameData) => {
             }
         };
 
-        if(playerInfo.socketId === socketClient.id) {
+        if (playerInfo.socketId === socketClient.id) {
             // Emit to the sending client
             socketClient.emit("UPDATE", payload);
         } else {
             // Emit to other clients
             socketClient.to(playerInfo.socketId).emit("UPDATE", payload);
         }
-        
+
     }
 
-    
+
 
 }
 
 exports.getNewDecks = (players, selectedIndexes) => {
-	const numberOfSets = players.length;
+    const numberOfSets = players.length;
 
-	const selectedSets = [];
+    const selectedSets = [];
 
-	for (let i = 0; i < numberOfSets; i++) {
-		const selectedCards = [];
-		while (selectedCards.length < 10) {
-			const randomIndex = Math.floor(Math.random() * cards.length);
-			if (!selectedIndexes.has(randomIndex)) {
-				selectedIndexes.add(randomIndex);
-				selectedCards.push(randomIndex);
-			}
-		}
-		players[i].cards = selectedCards
-		selectedSets.push(selectedCards);
-	}
-	return { players, selectedIndexes }
+    for (let i = 0; i < numberOfSets; i++) {
+        const selectedCards = [];
+        while (selectedCards.length < 10) {
+            const randomIndex = Math.floor(Math.random() * cards.length);
+            if (!selectedIndexes.has(randomIndex)) {
+                selectedIndexes.add(randomIndex);
+                selectedCards.push(randomIndex);
+            }
+        }
+        players[i].cards = selectedCards
+        selectedSets.push(selectedCards);
+    }
+    return { players, selectedIndexes }
 }
