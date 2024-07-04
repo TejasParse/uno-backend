@@ -17,8 +17,6 @@ const io = new Server(server, {
 	},
 });
 
-let onlineUsers = [];
-
 // {
 //   roomNo: -1,
 //   isHost: 0,
@@ -38,6 +36,50 @@ let onlineUsers = [];
 // }
 let gameRooms = [];
 
+// {
+// 	socketId,
+// 	username,
+// 	roomNo,
+// 	isHost
+// }
+let onlineUsers = [];
+const removeUsers = (userdata, index, socketClient) => {
+
+	let gameIndex = gameRooms.findIndex((elm)=> elm.roomNo === userdata.roomNo);
+	if(gameIndex !== -1) {
+		
+		let unHostMembers = gameRooms[gameIndex].players.filter((elm)=> !elm.isHost)
+
+		if(unHostMembers.length === 0) {
+			gameRooms.splice(gameIndex, 1);
+			console.log(userdata.roomNo, "Removing this room from array");
+		} else {
+			// TODO: Set a new host
+			console.log("Will Set a new host");
+			gameRooms[gameIndex].players = gameRooms[gameIndex].players.filter((elm)=> elm.username!== userdata.username)
+
+			if(userdata.isHost) {
+				let hostUser = unHostMembers[0];
+				let hostIndex = gameRooms[gameIndex].players.findIndex((elm)=> elm.socketId === hostUser.socketId)
+				socketClient.to(hostUser.socketId).emit("set_host", {
+	
+				})
+				gameRooms[gameIndex].players[hostIndex].isHost = 1;
+			}
+
+
+
+			updateAllPlayers(socketClient, gameRooms[gameIndex])
+		}
+
+	}
+
+	onlineUsers.splice(index, 1);
+
+};
+
+
+
 io.on("connection", (socket) => {
 
 	console.log("User Conencted", socket.id);
@@ -46,14 +88,15 @@ io.on("connection", (socket) => {
 	socket.on("create_room", (data) => {
 
 		let index = gameRooms.findIndex((elm) => elm.roomNo === data.roomNo);
-		console.log(data, "Room Data Creating", index);
+		// console.log(data, "Room Data Creating", index);
+
 
 		if (index === -1) {
 			let gameData = {
 				roomNo: data.roomNo,
 				host: data.username,
 
-				players: [{ username: data.username, cards: [], socketId: socket.id }],
+				players: [{ username: data.username, cards: [], socketId: socket.id, isHost: 1 }],
 
 				presentCard: 0,
 				selectedIndexes: new Set(),
@@ -66,6 +109,14 @@ io.on("connection", (socket) => {
 				messages: []
 			}
 			gameRooms.push(gameData)
+
+			onlineUsers.push({
+				socketId: socket.id,
+				username: data.username,
+				roomNo: data.roomNo,
+				isHost: 1
+			})
+			console.log(onlineUsers, "Added Online Users");
 
 			socket.emit("create_room_success", {
 				game: filterGameData(gameData),
@@ -112,6 +163,15 @@ io.on("connection", (socket) => {
 					type: "join_room_error"
 				})
 			} else {
+
+				onlineUsers.push({
+					socketId: socket.id,
+					username: data.username,
+					roomNo: data.roomNo,
+					isHost: 0
+				})
+				// console.log(onlineUsers, "Added Online Users");
+
 				gameRooms[index].players = [
 					...gameRooms[index].players,
 					{
@@ -262,8 +322,14 @@ io.on("connection", (socket) => {
 		player_message_send(data, socket);
 	})
 
-	socket.on("disconnect", (data) => {
-		console.log(data, "disconnect");
+	socket.on("disconnect", () => {
+		const userIndex = onlineUsers.findIndex((elm)=> elm.socketId === socket.id)
+		console.log(socket.id, "Someone disconnected?", userIndex, onlineUsers);
+		if(userIndex!== -1) {
+
+			// console.log(onlineUsers[userIndex], "Removed From Online Users");
+			removeUsers(onlineUsers[userIndex], userIndex, socket)
+		}
 	});
 
 });
