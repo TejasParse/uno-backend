@@ -498,6 +498,8 @@ io.on("connection", (socket) => {
 					}
 				]
 			};
+
+			gameRooms[gameIndex] = new_state123;
 	
 			updateAllPlayers(socket, new_state123)
 		}

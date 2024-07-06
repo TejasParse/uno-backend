@@ -28,10 +28,10 @@ exports.filterGameData = (gameData) => {
 }
 
 exports.updateAllPlayers = (socketClient, gameData) => {
-
+    console.log(gameData, "Updating all Players with this information!");
     let allPlayers = [
         ...gameData.players,
-        // ...gameData.winners
+        ...gameData.winners
     ]
 
     for (let i = 0; i < allPlayers.length; i++) {
