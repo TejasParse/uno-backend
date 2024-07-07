@@ -5,9 +5,7 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 const { filterGameData, updateAllPlayers, getNewDecks, getNextTurn, getRandomCards } = require("./utils/helper")
 
-const { join_room, host_message_send, player_message_send } = require("./controllers/socketControllers");
 const cards = require("./assets/cards.json");
-const e = require("express");
 
 app.use(cors());
 const server = http.createServer(app);
@@ -80,10 +78,6 @@ const removeUsers = (userdata, index, socketClient) => {
 					type: "command"
 				})
 			}
-
-
-
-
 
 			updateAllPlayers(socketClient, gameRooms[gameIndex])
 		}
@@ -280,6 +274,7 @@ io.on("connection", (socket) => {
 		}
 	})
 
+	// Player picks Random Card
 	socket.on("random_card", (data) => {
 		let index = gameRooms.findIndex((elm) => elm.roomNo === data.roomNo);
 
@@ -329,8 +324,9 @@ io.on("connection", (socket) => {
 
 			updateAllPlayers(socket, gameRooms[index])
 		}
-	})
+	})	
 
+	// Players play a card from deck
 	socket.on("play_card", (data) => {
 		const userDetails = onlineUsers.find((elm) => elm.socketId === socket.id)
 
@@ -456,6 +452,7 @@ io.on("connection", (socket) => {
 		}
 	})
 
+	// HOST clicks reset
 	socket.on("reset_game", (data) => {
 
 		const hostDetails = onlineUsers.find((elm)=>elm.socketId === socket.id)
@@ -504,14 +501,6 @@ io.on("connection", (socket) => {
 			updateAllPlayers(socket, new_state123)
 		}
 
-	})
-
-	socket.on("host_message_send", (data) => {
-		host_message_send(data, socket);
-	})
-
-	socket.on("player_message_send", (data) => {
-		player_message_send(data, socket);
 	})
 
 	socket.on("disconnect", () => {
