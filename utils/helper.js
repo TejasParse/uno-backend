@@ -66,7 +66,7 @@ exports.getNewDecks = (players, selectedIndexes) => {
 
     for (let i = 0; i < numberOfSets; i++) {
         const selectedCards = [];
-        while (selectedCards.length < 2) {
+        while (selectedCards.length < 10) {
             const randomIndex = Math.floor(Math.random() * cards.length);
             if (!selectedIndexes.has(randomIndex)) {
                 selectedIndexes.add(randomIndex);
